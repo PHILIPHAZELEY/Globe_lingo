@@ -3,11 +3,22 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'GlobeLingo - Travel & Language Companion',
-  description: 'Search countries, convert currencies, and look up English words',
+  description: 'Professional travel companion for exploring countries, converting currencies, and learning English words',
   icons: {
-    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🌍</text></svg>',
+    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">??</text></svg>',
   },
 }
+
+const themeScript = `
+  (function() {
+    try {
+      var theme = localStorage.getItem('theme');
+      if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      }
+    } catch(e) {}
+  })()
+`
 
 export default function RootLayout({
   children,
@@ -15,7 +26,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body>
         {children}
       </body>
