@@ -33,16 +33,26 @@ export default function CurrencyConverter() {
   const { isFavorite, toggleFavorite } = useFavorites('favoriteConversions')
 
   const localCurrency = useMemo(
-    () => (selectedCountry ? getPrimaryCurrencyCode(selectedCountry) : 'EUR'),
+    () => (selectedCountry ? getPrimaryCurrencyCode(selectedCountry) : 'USD'),
     [selectedCountry]
   )
 
+  const localCurrencyLabel = useMemo(() => {
+    if (!selectedCountry || !selectedCountry.currencies) return localCurrency
+    const currency = selectedCountry.currencies[localCurrency]
+    return currency ? `${localCurrency} · ${currency.name}` : localCurrency
+  }, [selectedCountry, localCurrency])
+
+  const currencyOptions = useMemo(() => {
+    if (!selectedCountry) return COMMON_CURRENCIES
+    return [localCurrency, ...COMMON_CURRENCIES.filter((currency) => currency !== localCurrency)]
+  }, [selectedCountry, localCurrency])
+
   useEffect(() => {
     if (!selectedCountry) return
-    // Auto-set fromCurrency to the selected country's currency
     setFromCurrency(localCurrency)
-    // Set toCurrency to USD if not already different from fromCurrency
     setToCurrency(localCurrency === 'USD' ? 'EUR' : 'USD')
+    setResult(null)
   }, [selectedCountry, localCurrency])
 
   const conversionKey = result ? `${result.fromCurrency}-${result.toCurrency}` : ''
@@ -124,11 +134,12 @@ export default function CurrencyConverter() {
               />
             )}
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Local currency</p>
-              <p className="mt-1 text-2xl font-semibold text-white">
-                {getCurrencySymbol(selectedCountry ?? undefined)} {localCurrency}
-              </p>
-              <p className="mt-1 text-sm text-slate-300">{selectedCountry ? getCurrencyLabel(selectedCountry) : 'Select a country to preview the local currency.'}</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Official currency</p>
+              <div className="mt-1 flex flex-wrap items-center gap-3">
+                <span className="text-2xl font-semibold text-white">{getCurrencySymbol(selectedCountry ?? undefined)} {localCurrency}</span>
+                <span className="rounded-full bg-white/10 px-3 py-1 text-xs uppercase tracking-[0.24em] text-slate-200">{selectedCountry?.cca2 ?? ''}</span>
+              </div>
+              <p className="mt-1 text-sm text-slate-300">{localCurrencyLabel}</p>
             </div>
           </div>
         </div>
@@ -155,7 +166,7 @@ export default function CurrencyConverter() {
                 onChange={(e) => setFromCurrency(e.target.value)}
                 className="input-field"
               >
-                {COMMON_CURRENCIES.map((curr) => (
+                {currencyOptions.map((curr) => (
                   <option key={curr} value={curr}>
                     {curr}
                   </option>
@@ -170,7 +181,7 @@ export default function CurrencyConverter() {
                 onChange={(e) => setToCurrency(e.target.value)}
                 className="input-field"
               >
-                {COMMON_CURRENCIES.map((curr) => (
+                {currencyOptions.map((curr) => (
                   <option key={curr} value={curr}>
                     {curr}
                   </option>
