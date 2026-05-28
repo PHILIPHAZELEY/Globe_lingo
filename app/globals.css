@@ -3,26 +3,12 @@
 @tailwind utilities;
 
 :root {
-  --primary: #3b82f6;
-  --secondary: #1e40af;
-  --accent: #6366f1;
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8fafc;
-  --text-primary: #0f172a;
-  --text-secondary: #64748b;
-  --border: #e2e8f0;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-}
-
-.dark {
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --text-primary: #f1f5f9;
-  --text-secondary: #cbd5e1;
-  --border: #334155;
+  --bg-primary: #020617;
+  --bg-secondary: #0f172a;
+  --surface: rgba(15, 23, 42, 0.88);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --border: rgba(148, 163, 184, 0.15);
 }
 
 * {
@@ -33,161 +19,100 @@
 
 html {
   scroll-behavior: smooth;
-  color-scheme: light;
-}
-
-html.dark {
   color-scheme: dark;
 }
 
 body {
-  background-color: var(--bg-primary);
+  min-height: 100vh;
+  background: radial-gradient(circle at top, rgba(56, 189, 248, 0.14), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(124, 58, 237, 0.18), transparent 28%),
+    linear-gradient(180deg, #020617 0%, #090f1f 100%);
   color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-input, textarea, select {
-  font-family: inherit;
-  font-size: inherit;
+input,
+textarea,
+select {
+  font: inherit;
   outline: none;
   color: inherit;
 }
 
 button {
+  font: inherit;
   cursor: pointer;
-  font-family: inherit;
-  font-size: inherit;
-  transition: all 0.2s ease;
 }
 
 @layer components {
   .glass {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-
-  .dark .glass {
-    background: rgba(15, 23, 42, 0.6);
-    border: 1px solid rgba(148, 163, 184, 0.1);
-  }
-
-  .gradient-text {
-    background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .gradient-border {
-    border: 1px solid;
-    border-image: linear-gradient(135deg, #3b82f6, #6366f1) 1;
+    background: rgba(15, 23, 42, 0.72);
+    backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
   }
 
   .card {
-    @apply glass rounded-2xl p-6 md:p-8 border border-opacity-20 shadow-sm hover:shadow-md transition-all duration-300;
-  }
-
-  .card-hover {
-    @apply hover:translate-y-[-4px] hover:shadow-lg;
-  }
-
-  .section {
-    @apply rounded-2xl p-6 md:p-8 border shadow-sm transition-all duration-300;
+    @apply rounded-[2rem] border border-white/10 shadow-2xl shadow-slate-950/20 transition-all duration-300;
+    background: rgba(15, 23, 42, 0.72);
+    backdrop-filter: blur(18px);
   }
 
   .section-title {
-    @apply text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2;
+    @apply text-3xl md:text-4xl font-bold mb-2;
+    background: linear-gradient(135deg, #60a5fa 0%, #8b5cf6 48%, #60a5fa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 
   .section-subtitle {
-    @apply text-gray-600 dark:text-gray-400 mb-8;
+    @apply text-slate-400;
   }
 
   .input-field {
-    @apply w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 transition-all duration-200 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400;
+    @apply w-full rounded-2xl border border-slate-700 bg-slate-950/90 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200;
   }
 
   .button-primary {
-    @apply bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 active:scale-95 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none;
+    @apply rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-white font-semibold shadow-lg shadow-blue-500/20 transition-all duration-200 hover:scale-[1.01] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .button-secondary {
-    @apply bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 active:scale-95;
+    @apply rounded-2xl bg-slate-800 px-6 py-3 text-slate-100 font-semibold border border-slate-700 transition-all duration-200 hover:bg-slate-700;
   }
 
   .button-ghost {
-    @apply text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 font-semibold py-3 px-6 rounded-xl transition-all duration-200;
-  }
-
-  .button-sm {
-    @apply py-2 px-4 text-sm rounded-lg;
+    @apply rounded-2xl px-6 py-3 text-blue-400 hover:bg-blue-500/10;
   }
 
   .button-icon {
-    @apply w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800;
-  }
-
-  .loader {
-    @apply inline-block h-8 w-8 animate-spin rounded-full border-4 border-gray-300 dark:border-gray-600 border-t-blue-600;
-  }
-
-  .loader-sm {
-    @apply h-4 w-4 border-2 border-gray-300 dark:border-gray-600 border-t-blue-600;
-  }
-
-  .skeleton {
-    @apply animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg;
-  }
-
-  .fade-enter {
-    @apply animate-fadeIn;
+    @apply inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-800 bg-slate-900/90 text-slate-200 transition-all duration-200 hover:bg-slate-800;
   }
 
   .nav-link {
-    @apply flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800;
+    @apply flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-300 transition-all duration-200 hover:bg-slate-900/80;
   }
 
   .nav-link.active {
-    @apply bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 text-blue-600 dark:text-blue-400 font-semibold;
+    @apply bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-blue-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent;
   }
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(14px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
   }
 }
 
@@ -200,58 +125,19 @@ button {
   }
 }
 
-@layer utilities {
-  .animate-fadeIn {
-    animation: fadeIn 0.3s ease-in-out;
-  }
-
-  .animate-slideInLeft {
-    animation: slideInLeft 0.3s ease-in-out;
-  }
-
-  .animate-slideInRight {
-    animation: slideInRight 0.3s ease-in-out;
-  }
-
-  .animate-shimmer {
-    animation: shimmer 2s infinite;
-    background: linear-gradient(
-      to right,
-      transparent 0%,
-      rgba(255, 255, 255, 0.2) 20%,
-      rgba(255, 255, 255, 0.3) 60%,
-      transparent 100%
-    );
-    background-size: 1000px 100%;
-  }
-
-  .transition-smooth {
-    @apply transition-all duration-300 ease-in-out;
-  }
-
-  .group-hover\:lift:hover {
-    @apply transform -translate-y-1 shadow-lg;
-  }
-
-  .text-gradient {
-    @apply bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent;
-  }
-}
-
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
+  background: rgba(15, 23, 42, 0.55);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 4px;
+  background: rgba(148, 163, 184, 0.24);
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #cbd5e1;
+  background: rgba(148, 163, 184, 0.42);
 }

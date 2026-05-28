@@ -1,195 +1,144 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
-import SkeletonLoader from '@/components/ui/SkeletonLoader'
 import Loader from '@/components/ui/Loader'
+import SkeletonLoader from '@/components/ui/SkeletonLoader'
 import { useFavorites } from '@/hooks/useFavorites'
-
-interface Country {
-  name: {
-    official: string
-    common: string
-  }
-  flags: {
-    svg: string
-    png: string
-  }
-  capital?: string[]
-  population: number
-  languages?: Record<string, string>
-  currencies?: Record<string, { name: string; symbol: string }>
-}
+import { useCountry } from '@/app/context/CountryContext'
+import {
+  formatPopulation,
+  getCountryLocaleLabel,
+  getCurrencyLabel,
+  getLanguageSummary,
+} from '@/lib/countryUtils'
 
 export default function CountrySearch() {
   const [searchQuery, setSearchQuery] = useState('')
-  const [country, setCountry] = useState<Country | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const { selectedCountry, searchCountry, loading, error } = useCountry()
   const { isFavorite, toggleFavorite } = useFavorites('favoriteCountries')
+
+  const localeLabel = useMemo(
+    () => (selectedCountry ? getCountryLocaleLabel(selectedCountry) : 'Global Intelligence'),
+    [selectedCountry]
+  )
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!searchQuery.trim()) {
-      setError('Please enter a country name')
-      return
-    }
-
-    setLoading(true)
-    setError('')
-    setCountry(null)
-
-    try {
-      const response = await fetch(
-        `https://restcountries.com/v3.1/name/${encodeURIComponent(searchQuery)}`
-      )
-
-      if (!response.ok) {
-        throw new Error('Country not found')
-      }
-
-      const data = await response.json()
-      if (data && data.length > 0) {
-        setCountry(data[0])
-      } else {
-        setError('We couldn\u0027t find that country. Try another name!')
-      }
-    } catch (err) {
-      setError('We couldn\u0027t find that country. Try another name!')
-    } finally {
-      setLoading(false)
-    }
+    if (!searchQuery.trim()) return
+    await searchCountry(searchQuery)
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="space-y-6"
-    >
-      <div>
-        <h2 className="section-title">\uD83C\uDF0D Explore Countries</h2>
-        <p className="section-subtitle">Discover information about any country in the world</p>
-      </div>
+    <section id="overview" className="space-y-6">
+      <div className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
+        <div className="space-y-6">
+          <div className="rounded-3xl bg-white/5 border border-white/10 p-8 shadow-xl shadow-blue-500/10">
+            <p className="text-sm uppercase tracking-[0.3em] text-blue-300/80">Connected country engine</p>
+            <h1 className="mt-4 text-4xl font-bold text-white sm:text-5xl">Explore the world through one synchronized lens.</h1>
+            <p className="mt-4 max-w-2xl text-slate-300">Search any country to instantly refresh weather, currency, language, food, time, and map insights across the entire GlobeLingo ecosystem.</p>
+          </div>
 
-      <form onSubmit={handleSearch} className="flex flex-col gap-3 md:flex-row">
-        <input
-          type="text"
-          placeholder="Search for a country (e.g., Japan, France, Brazil)"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="input-field flex-1"
-        />
-        <Button type="submit" disabled={loading}>
-          {loading ? <Loader size="sm" /> : 'Search'}
-        </Button>
-      </form>
-
-      {error && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 flex items-center gap-3"
-        >
-          <span className="text-xl">\u26A0\uFE0F</span>
-          <span>{error}</span>
-        </motion.div>
-      )}
-
-      {loading && <SkeletonLoader />}
-
-      {country && !loading && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <Card>
-            <div className="space-y-6">
-              <div className="flex items-start justify-between">
+          <Card className="bg-slate-950/80 border-slate-700 p-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                    {country.name.official}
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {country.name.common}
-                  </p>
+                  <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Country selector</p>
+                  <h2 className="mt-2 text-2xl font-semibold text-white">Search or switch country</h2>
                 </div>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => toggleFavorite(country.name.official)}
-                  className="text-3xl"
-                  title={isFavorite(country.name.official) ? 'Remove from favorites' : 'Add to favorites'}
-                >
-                  {isFavorite(country.name.official) ? '\u2B50' : '\u2606'}
-                </motion.button>
+                {selectedCountry && (
+                  <button
+                    onClick={() => toggleFavorite(selectedCountry.name.official)}
+                    className="text-3xl"
+                    title={isFavorite(selectedCountry.name.official) ? 'Remove from favorites' : 'Add to favorites'}
+                  >
+                    {isFavorite(selectedCountry.name.official) ? '★' : '☆'}
+                  </button>
+                )}
               </div>
 
-              {country.flags.svg && (
-                <motion.img
-                  whileHover={{ scale: 1.02 }}
-                  src={country.flags.svg}
-                  alt={'Flag of ' + country.name.official}
-                  className="w-full md:w-48 h-auto rounded-xl object-cover shadow-md"
-                  loading="lazy"
-                />
+              <form onSubmit={handleSearch} className="grid gap-4">
+                <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+                  <input
+                    type="text"
+                    placeholder="Search for a country, e.g. Japan"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="input-field bg-slate-900/80 border-slate-700"
+                  />
+                  <Button type="submit" disabled={loading} className="w-full sm:w-auto">
+                    {loading ? <Loader size="sm" /> : 'Discover'}
+                  </Button>
+                </div>
+              </form>
+
+              {error && (
+                <div className="rounded-3xl bg-red-500/10 border border-red-400/20 p-4 text-sm text-red-200">
+                  {error}
+                </div>
               )}
 
-              <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
-                {country.capital && country.capital.length > 0 && (
-                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4">
-                    <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
-                      Capital
-                    </p>
-                    <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {country.capital[0]}
-                    </p>
-                  </div>
-                )}
-
-                <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-4">
-                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
-                    Population
-                  </p>
-                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {(country.population / 1_000_000).toFixed(1)}M
-                  </p>
-                </div>
-
-                {country.languages && Object.keys(country.languages).length > 0 && (
-                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-4">
-                    <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
-                      Languages
-                    </p>
-                    <p className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2">
-                      {Object.values(country.languages).slice(0, 2).join(', ')}
-                    </p>
-                  </div>
-                )}
-
-                {country.currencies && Object.keys(country.currencies).length > 0 && (
-                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl p-4">
-                    <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
-                      Currencies
-                    </p>
-                    <p className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2">
-                      {Object.entries(country.currencies)
-                        .map(([code]) => code)
-                        .slice(0, 2)
-                        .join(', ')}
-                    </p>
-                  </div>
-                )}
-              </div>
+              {loading && <SkeletonLoader variant="text" />}
             </div>
           </Card>
-        </motion.div>
-      )}
-    </motion.div>
+        </div>
+
+        <Card className="bg-slate-950/80 border-slate-700 p-6">
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Current country</p>
+              <p className="text-sm text-blue-300/80">{localeLabel}</p>
+              <h2 className="text-3xl font-semibold text-white">
+                {selectedCountry?.name.official ?? 'Waiting for your first country'}
+              </h2>
+            </div>
+
+            {selectedCountry ? (
+              <div className="space-y-5">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-3xl bg-white/5 p-5">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Capital</p>
+                    <p className="mt-3 text-lg font-semibold text-white">{selectedCountry.capital?.[0] ?? '—'}</p>
+                  </div>
+                  <div className="rounded-3xl bg-white/5 p-5">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Population</p>
+                    <p className="mt-3 text-lg font-semibold text-white">{formatPopulation(selectedCountry.population)}</p>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-3xl bg-white/5 p-5">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Languages</p>
+                    <p className="mt-3 text-lg font-semibold text-white">{getLanguageSummary(selectedCountry)}</p>
+                  </div>
+                  <div className="rounded-3xl bg-white/5 p-5">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Currency</p>
+                    <p className="mt-3 text-lg font-semibold text-white">{getCurrencyLabel(selectedCountry)}</p>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-3xl bg-white/5 p-5">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Region</p>
+                    <p className="mt-3 text-lg font-semibold text-white">{selectedCountry.region ?? '—'}</p>
+                  </div>
+                  <div className="rounded-3xl bg-white/5 p-5">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Timezone</p>
+                    <p className="mt-3 text-lg font-semibold text-white">{selectedCountry.timezones?.[0] ?? '—'}</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-3xl bg-white/5 p-5 text-slate-300">
+                Search for a country to activate the global intelligence platform.
+              </div>
+            )}
+          </div>
+        </Card>
+      </div>
+    </section>
   )
 }

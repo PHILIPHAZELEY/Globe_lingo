@@ -11,10 +11,12 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   const [isDark, setIsDark] = useState(false)
 
   useEffect(() => {
-    const theme = localStorage.getItem('theme') || 'light'
+    const theme = localStorage.getItem('theme') || 'dark'
     setIsDark(theme === 'dark')
     if (theme === 'dark') {
       document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
     }
   }, [])
 
@@ -34,12 +36,12 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
       initial={{ y: -80 }}
       animate={{ y: 0 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className="sticky top-0 z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 shadow-sm"
+      className="sticky top-0 z-20 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800 shadow-sm"
     >
-      <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
         <button
           onClick={onMenuClick}
-          className="md:hidden button-icon hover:bg-gray-100 dark:hover:bg-gray-800"
+          className="md:hidden button-icon hover:bg-slate-800"
           aria-label="Toggle sidebar menu"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -47,16 +49,19 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
           </svg>
         </button>
 
-        <div className="md:hidden flex items-center gap-2">
-          <span className="text-2xl">??</span>
-          <h1 className="text-xl font-bold gradient-text">GlobeLingo</h1>
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">🌐</span>
+          <div>
+            <h1 className="text-xl font-bold text-white">GlobeLingo</h1>
+            <p className="text-sm text-slate-400">Premium global intelligence</p>
+          </div>
         </div>
 
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={toggleDarkMode}
-          className="button-icon ml-auto"
+          className="button-icon"
           title={isDark ? 'Light mode' : 'Dark mode'}
         >
           {isDark ? (
