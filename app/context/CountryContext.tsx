@@ -69,10 +69,14 @@ export function CountryProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   useEffect(() => {
-    if (!selectedCountry) {
+    const pending = localStorage.getItem('pendingSearch')
+    if (pending) {
+      searchCountry(pending)
+      localStorage.removeItem('pendingSearch')
+    } else if (!selectedCountry) {
       searchCountry('Ghana')
     }
-  }, [selectedCountry, searchCountry])
+  }, [])
 
   const value = useMemo(
     () => ({
