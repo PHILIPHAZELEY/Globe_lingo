@@ -378,6 +378,20 @@ export function getFoodsForCountry(countryName: string) {
   const key = Object.keys(CULTURE_FOODS).find(k => countryName.includes(k) || k.includes(countryName))
   if (key) return CULTURE_FOODS[key]
 
+  // If still no match, try alternative country name patterns
+  const alternatives: Record<string, string> = {
+    'Sri Lanka': 'Sri Lanka',
+    'Ivory Coast': 'Côte d\'Ivoire',
+    'Democratic Republic of the Congo': 'DR Congo',
+    'Czech Republic': 'Czechia',
+    'South Sudan': 'South Sudan',
+    'United Kingdom': 'United Kingdom',
+    'New Zealand': 'New Zealand',
+  }
+
+  const altKey = alternatives[countryName]
+  if (altKey && CULTURE_FOODS[altKey]) return CULTURE_FOODS[altKey]
+
   // Return empty array if no match
   return []
 }

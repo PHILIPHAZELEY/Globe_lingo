@@ -8,27 +8,52 @@ interface NavbarProps {
 }
 
 export default function Navbar({ onMenuClick }: NavbarProps) {
-  const [isDark, setIsDark] = useState(false)
+  const [isDark, setIsDark] = useState(true)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const theme = localStorage.getItem('theme') || 'dark'
+    // Hydration fix: only run on client
+    setMounted(true)
+    
+    // Check system preference or localStorage
+    const storedTheme = localStorage.getItem('theme')
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    const theme = storedTheme || (prefersDark ? 'dark' : 'light')
+    
     setIsDark(theme === 'dark')
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
+    applyTheme(theme === 'dark')
   }, [])
 
-  const toggleDarkMode = () => {
-    const newTheme = isDark ? 'light' : 'dark'
-    setIsDark(!isDark)
-    localStorage.setItem('theme', newTheme)
-    if (newTheme === 'dark') {
+  const applyTheme = (dark: boolean) => {
+    if (dark) {
       document.documentElement.classList.add('dark')
+      document.documentElement.style.colorScheme = 'dark'
     } else {
       document.documentElement.classList.remove('dark')
+      document.documentElement.style.colorScheme = 'light'
     }
+    localStorage.setItem('theme', dark ? 'dark' : 'light')
+  }
+
+  const toggleDarkMode = () => {
+    const newDark = !isDark
+    setIsDark(newDark)
+    applyTheme(newDark)
+  }
+
+  if (!mounted) {
+    return (
+      <nav className="sticky top-0 z-20 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
+          <div className="flex-1" />
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🌐</span>
+            <h1 className="text-xl font-bold text-white">GlobeLingo</h1>
+          </div>
+          <div className="flex-1" />
+        </div>
+      </nav>
+    )
   }
 
   return (
@@ -36,7 +61,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
       initial={{ y: -80 }}
       animate={{ y: 0 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className="sticky top-0 z-20 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800 shadow-sm"
+      className="sticky top-0 z-20 bg-slate-950/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-800 dark:border-slate-700 shadow-sm"
     >
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
         <button

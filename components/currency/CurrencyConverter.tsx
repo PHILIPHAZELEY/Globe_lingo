@@ -9,6 +9,7 @@ import Loader from '@/components/ui/Loader'
 import { useFavorites } from '@/hooks/useFavorites'
 import { useCountry } from '@/app/context/CountryContext'
 import { getCurrencyLabel, getPrimaryCurrencyCode, getCurrencySymbol } from '@/lib/countryUtils'
+import { SUPPORTED_CURRENCIES, getCurrencyInfo, getSortedCurrencies } from '@/lib/worldCurrencies'
 
 interface ConversionResult {
   amount: number
@@ -16,11 +17,6 @@ interface ConversionResult {
   toCurrency: string
   result: number
 }
-
-const COMMON_CURRENCIES = [
-  'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'CNY', 'INR', 'MXN',
-  'SGD', 'HKD', 'NZD', 'SEK', 'NOK', 'KRW', 'THB', 'MYR', 'PHP', 'IDR',
-]
 
 export default function CurrencyConverter() {
   const { selectedCountry } = useCountry()
@@ -44,9 +40,8 @@ export default function CurrencyConverter() {
   }, [selectedCountry, localCurrency])
 
   const currencyOptions = useMemo(() => {
-    if (!selectedCountry) return COMMON_CURRENCIES
-    return [localCurrency, ...COMMON_CURRENCIES.filter((currency) => currency !== localCurrency)]
-  }, [selectedCountry, localCurrency])
+    return getSortedCurrencies(localCurrency)
+  }, [localCurrency])
 
   useEffect(() => {
     if (!selectedCountry) return

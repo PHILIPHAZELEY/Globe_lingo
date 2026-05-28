@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import Card from '@/components/ui/Card'
+import Button from '@/components/ui/Button'
+import Loader from '@/components/ui/Loader'
 import { useCountry } from '@/app/context/CountryContext'
 import { getCountryLatitude, getCountryLongitude } from '@/lib/countryUtils'
 
@@ -26,9 +28,33 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   return R * c
 }
 
+interface POI {
+  id: number
+  name: string
+  type: string
+  lat: number
+  lon: number
+  distance?: number
+}
+
+const POI_TYPES = [
+  { value: 'restaurant', label: '🍽️ Restaurants', icon: '🍽️' },
+  { value: 'hotel', label: '🏨 Hotels', icon: '🏨' },
+  { value: 'attraction', label: '🎢 Attractions', icon: '🎢' },
+  { value: 'museum', label: '🏛️ Museums', icon: '🏛️' },
+  { value: 'beach', label: '🏖️ Beaches', icon: '🏖️' },
+  { value: 'park', label: '🌳 Parks', icon: '🌳' },
+  { value: 'shopping', label: '🛍️ Shopping', icon: '🛍️' },
+  { value: 'landmark', label: '🗼 Landmarks', icon: '🗼' },
+]
+
 export default function MapPanel() {
   const { selectedCountry } = useCountry()
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null)
+  const [selectedPOIType, setSelectedPOIType] = useState('restaurant')
+  const [pois, setPois] = useState<POI[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     if (!navigator.geolocation) return
@@ -44,6 +70,84 @@ export default function MapPanel() {
     )
   }, [])
 
+  const searchPOIs = async () => {
+    if (!selectedCountry) return
+
+    setLoading(true)
+    setError('')
+    setPois([])
+
+    try {
+      const lat = getCountryLatitude(selectedCountry)
+      const lon = getCountryLongitude(selectedCountry)
+      if (!lat || !lon) throw new Error('Country coordinates not found')
+
+      // Using Overpass API to search for nearby POIs
+      const poiTagMap: Record<string, string> = {
+        restaurant: 'amenity=restaurant',
+        hotel: 'tourism=hotel',
+        attraction: 'tourism=attraction',
+        museum: 'tourism=museum',
+        beach: 'natural=beach',
+        park: 'leisure=park',
+        shopping: 'shop~.*',
+        landmark: 'historic=monument',
+      }
+
+      const bbox = createBoundingBox(lat, lon)
+      const query = `
+        [bbox:${bbox.south},${bbox.west},${bbox.north},${bbox.east}];
+        (node[${poiTagMap[selectedPOIType]}];way[${poiTagMap[selectedPOIType]}];);
+        out geom;
+      `
+
+      const response = await fetch('https://overpass-api.de/api/interpreter', {
+        method: 'POST',
+        body: query,
+      })
+
+      if (!response.ok) throw new Error('POI search failed')
+
+      const data = await response.json()
+      const results: POI[] = []
+
+      data.elements.forEach((element: any) => {
+        const name = element.tags?.name || `${selectedPOIType.charAt(0).toUpperCase() + selectedPOIType.slice(1)}`
+        const elemLat = element.lat || (element.center?.lat)
+        const elemLon = element.lon || (element.center?.lon)
+
+        if (name && elemLat && elemLon) {
+          const distance = userLocation ? calculateDistance(lat, lon, elemLat, elemLon) : undefined
+          results.push({
+            id: element.id,
+            name,
+            type: selectedPOIType,
+            lat: elemLat,
+            lon: elemLon,
+            distance,
+          })
+        }
+      })
+
+      // Sort by distance if user location available
+      if (userLocation) {
+        results.sort((a, b) => (a.distance || 0) - (b.distance || 0))
+      }
+
+      setPois(results.slice(0, 15)) // Show top 15 results
+    } catch (err) {
+      setError('Unable to search for nearby locations. Please try another POI type.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (selectedCountry) {
+      searchPOIs()
+    }
+  }, [selectedCountry, selectedPOIType])
+
   if (!selectedCountry) return null
 
   const lat = getCountryLatitude(selectedCountry)
@@ -52,7 +156,7 @@ export default function MapPanel() {
     return (
       <section id="map" className="space-y-6">
         <div>
-          <h2 className="section-title">Map & Orientation</h2>
+          <h2 className="section-title">🗺️ Map & Exploration</h2>
           <p className="section-subtitle">Location context for the selected country</p>
         </div>
         <Card className="bg-slate-950/80 border-slate-700">
@@ -73,11 +177,9 @@ export default function MapPanel() {
 
   return (
     <section id="map" className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h2 className="section-title">Map & Location</h2>
-          <p className="section-subtitle">Interactive view for {selectedCountry.name.common}</p>
-        </div>
+      <div>
+        <h2 className="section-title">🗺️ Map & Exploration</h2>
+        <p className="section-subtitle">Interactive exploration and POI discovery for {selectedCountry.name.common}</p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
@@ -89,7 +191,7 @@ export default function MapPanel() {
               className="h-96 w-full border-0"
             />
             <div className="p-4 bg-gradient-to-t from-slate-950/90 to-transparent">
-              <p className="text-xs text-slate-400">Click on the map to explore • Zoom and drag to navigate</p>
+              <p className="text-xs text-slate-400">Click on the map to explore • Zoom and drag to navigate • {pois.length} {selectedPOIType}(s) nearby</p>
             </div>
           </Card>
         </motion.div>
@@ -129,7 +231,7 @@ export default function MapPanel() {
                   {distance ? `${distance.toFixed(0)} km` : '—'}
                 </p>
                 <p className="mt-2 text-sm text-slate-300">
-                  Your location: {userLocation.lat.toFixed(2)}° N, {userLocation.lon.toFixed(2)}° E
+                  Your position: {userLocation.lat.toFixed(2)}° N, {userLocation.lon.toFixed(2)}° E
                 </p>
               </Card>
             </motion.div>
@@ -145,6 +247,71 @@ export default function MapPanel() {
           )}
         </div>
       </div>
+
+      <motion.div variants={itemVariants} initial="hidden" animate="visible" className="space-y-4">
+        <Card className="bg-slate-950/80 border-slate-700 p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">🔍 Nearby Points of Interest</h3>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6">
+            {POI_TYPES.map((type) => (
+              <motion.button
+                key={type.value}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setSelectedPOIType(type.value)}
+                className={`rounded-lg px-3 py-2 text-sm font-medium transition-all ${
+                  selectedPOIType === type.value
+                    ? 'bg-blue-600 text-white border border-blue-400'
+                    : 'bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700'
+                }`}
+              >
+                {type.icon} <span className="hidden sm:inline">{type.value}</span>
+              </motion.button>
+            ))}
+          </div>
+
+          {error && (
+            <div className="p-4 bg-red-500/10 border border-red-400/20 rounded-lg text-red-200 mb-4">
+              {error}
+            </div>
+          )}
+
+          {loading && (
+            <div className="flex justify-center py-8">
+              <Loader size="md" />
+            </div>
+          )}
+
+          {!loading && pois.length > 0 && (
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {pois.map((poi) => (
+                <motion.div
+                  key={poi.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="p-3 bg-slate-900/50 border border-slate-700 rounded-lg hover:border-blue-400/50 transition-all"
+                >
+                  <p className="font-semibold text-white text-sm">{poi.name}</p>
+                  <div className="flex justify-between items-start mt-2">
+                    <p className="text-xs text-slate-400">
+                      📍 {poi.lat.toFixed(2)}°, {poi.lon.toFixed(2)}°
+                    </p>
+                    {poi.distance && (
+                      <p className="text-xs text-blue-300 font-medium">{poi.distance.toFixed(1)} km away</p>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+          {!loading && pois.length === 0 && !error && (
+            <div className="text-center py-8">
+              <p className="text-slate-400">No {selectedPOIType}s found in this area. Try another category.</p>
+            </div>
+          )}
+        </Card>
+      </motion.div>
     </section>
   )
 }

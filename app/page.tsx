@@ -8,6 +8,7 @@ import CountrySearch from '@/components/country/CountrySearch'
 import CurrencyConverter from '@/components/currency/CurrencyConverter'
 import WeatherSection from '@/components/experience/WeatherSection'
 import LanguageInsights from '@/components/experience/LanguageInsights'
+import LanguageTranslator from '@/components/experience/LanguageTranslator'
 import CultureCuisine from '@/components/experience/CultureCuisine'
 import MapPanel from '@/components/experience/MapPanel'
 import LiveClock from '@/components/dashboard/LiveClock'
@@ -65,6 +66,9 @@ function HomeContent() {
                     <LanguageInsights />
                   </motion.div>
                   <motion.div variants={itemVariants}>
+                    <LanguageTranslator />
+                  </motion.div>
+                  <motion.div variants={itemVariants}>
                     <CultureCuisine />
                   </motion.div>
                   <motion.div variants={itemVariants}>
@@ -89,7 +93,8 @@ function HomeContent() {
                 className="rounded-3xl border border-white/10 bg-white/5 p-6 text-center text-sm text-slate-400"
               >
                 <p>GlobeLingo is a synchronized global intelligence dashboard for travel, culture, and communication.</p>
-                <p className="mt-2 text-slate-500">Powered by REST Countries, Open-Meteo, Frankfurter, Free Dictionary, and TheMealDB.</p>
+                <p className="mt-2 text-slate-500">Global Currency Intelligence • Multilingual Translation • Authentic Food & Culture • Advanced Map Exploration • Responsive Design</p>
+                <p className="mt-2 text-xs text-slate-600">Powered by REST Countries • Open-Meteo • Frankfurter • MyMemory Translation • Real-time data integration</p>
               </motion.footer>
             </motion.div>
           </motion.div>
